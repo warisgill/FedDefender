@@ -1,6 +1,6 @@
 # FedDefender: Backdoor Attack Defense in Federated Learning (Tutorial)
 
-This tutorial is based on a paper accepted at SE4SafeML: Dependability and Trustworthiness of Safety-Critical Systems with Machine Learned Components (Colocated with FSE 2023). The ArXiv version of the manuscript is available [here](https://arxiv.org/abs/2307.08672).
+`This tutorial is based on a paper accepted at SE4SafeML: Dependability and Trustworthiness of Safety-Critical Systems with Machine Learned Components (Colocated with FSE 2023). The ArXiv version of the manuscript is available` [here](https://arxiv.org/abs/2307.08672).
 
 Federated Learning is a method for training machine learning models across multiple devices or servers, each holding local data samples, without the need to exchange them. This approach is excellent for privacy, but it also introduces the possibility of certain types of attacks. FedDefender is designed to address this issue.
 
