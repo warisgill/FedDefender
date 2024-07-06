@@ -6,7 +6,7 @@ from diskcache import Index
 from utils.fl_simulation import Simulation
 
 
-def main(storage_dir, cache_name,  num_clients, num_rounds, groups, batch_size, dname, percentage_of_randomly_selected_clients, client_epochs, strategy, malacious_clients=[-1], ray_storage="/home/gulzar/ray_storage/ray", client_lr=0.001, architecture="simplecnn",  distribution_type="nonIID"):
+def main(storage_dir="storage_fed_debug" , cache_name='c_waris', num_clients=30, num_rounds=1, groups=-1, batch_size=512, dname='cifar10', percentage_of_randomly_selected_clients=1, client_epochs=5, strategy='FedAvg', malacious_clients=[0,1,3,5,7], ray_storage="/home/gulzar/ray_storage/ray", client_lr=0.001, architecture="densenet121",  distribution_type="iid"):
     # fixed variables
     print(f"stratgey = {strategy}")
     GRAY_SCALE_DATASETS = ["mnist", "fashionmnist"]
@@ -55,6 +55,13 @@ def main(storage_dir, cache_name,  num_clients, num_rounds, groups, batch_size, 
     sim_config["client_epochs"] = client_epochs
     sim_config["data_distribution_config"] = data_distribution_config
     sim_config["nn_config"] = nn_config
+
+    # print(f'mal  {malacious_clients}')
+
+    # _ = input("pres")
+
+    # print(sim_config)
+
 
     sim = Simulation(sim_config, cache)
     sim.run()

@@ -26,7 +26,7 @@ def getStateDictFromParameters(nn_config, parameters):
     ndarr = fl.common.parameters_to_ndarrays(parameters)
     temp_net = initializeModel(nn_config)
     params_dict = zip(temp_net.state_dict().keys(), ndarr)
-    state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+    state_dict = OrderedDict({k: torch.from_numpy(v) for k, v in params_dict})
     temp_net.load_state_dict(state_dict, strict=True)
     return temp_net.state_dict()
 

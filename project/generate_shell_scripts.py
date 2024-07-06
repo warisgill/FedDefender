@@ -16,11 +16,11 @@ def getCompletedTrainingKeys():
     return keys
 
 def trainingScripts():
-   strategies = ["FedAvg+FedFuzz_Defense_Strategy", "FedAvg+Gradient_Clipping_Strategy"] # "FedAvg"
-   batch_size = 32 
-   num_rounds = 15
-   client_epochs = 15
-   malacious_clients_lists  = [[-1], [0]] # -1 means no malacious clients, 0 means client 0 is malacious
+   strategies = ["FedAvg"] # "FedAvg"
+   batch_size = 512 
+   num_rounds = 1
+   client_epochs = 5
+   malacious_clients_lists  = [[0,1,3,5,7]] # -1 means no malacious clients, 0 means client 0 is malacious
    m = 1
    groups = -1
    with open('_run_training.sh', 'w') as f:
@@ -28,10 +28,10 @@ def trainingScripts():
     for dname in ["mnist"]: # , "fashionmnist" 
         for strategy in strategies:
             for malacious_clients in malacious_clients_lists:
-                for num_clients in [20]: 
-                    cmd =  f"python main_training.py --storage_dir {storage_dir} --cache_name {cache_name}  --num_clients {num_clients} --num_rounds {num_rounds} --groups {groups} --batch_size {batch_size} --dname {dname} --percentage_of_randomly_selected_clients {m} --client_epochs {client_epochs} --strategy {strategy} --malacious_clients {malacious_clients}"
-                    f.write(cmd)
-                    f.write("\n")
+            for num_clients in [20]: 
+                cmd =  f"python main_training.py --storage_dir {storage_dir} --cache_name {cache_name}  --num_clients {num_clients} --num_rounds {num_rounds} --groups {groups} --batch_size {batch_size} --dname {dname} --percentage_of_randomly_selected_clients {m} --client_epochs {client_epochs} --strategy {strategy} --malacious_clients {malacious_clients}"
+                f.write(cmd)
+                f.write("\n")
 
 def evaluateScript():
     keys = []

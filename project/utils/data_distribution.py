@@ -1,12 +1,12 @@
 # from dotmap import DotMap
-from cmath import log
 import torch
 import torchvision
 from torch.utils.data import DataLoader
 
-import torchvision.transforms as transforms
+import random
+
 from torch.utils.data import DataLoader, random_split
-from torchvision.datasets import CIFAR10
+
 
 # import pytorch_lightning as pl
 import logging
@@ -242,8 +242,28 @@ def initiizeClientsData(dist_type, dname, num_groups, num_clients, batch_size, s
     
  
 
+class SubsetToDataset(torch.utils.data.Dataset):
+    def __init__(self, subset, greyscale=False):
+        self.subset = subset
+        # self.X, self.Y = self.subset, self.subset.target
+        self.greyscale = greyscale
 
-def iid_split(dname:str, num_clients: int, storage_dir:str, batch_size=32):
+    def __getitem__(self, index):
+        x, y = self.subset[index]
+        # print(">> XShape", x.shape, y)
+        # trans = transforms.Lambda(lambda x: x.repeat(3, 1, 1) if x.size(0)==1 else x)
+        # x = trans(x)
+        # import torchvision.transforms as T
+        # x =  T.Grayscale(num_output_channels=3)(x)
+        return x, y
+
+    def __len__(self):
+        return len(self.subset)
+
+
+
+
+def iid_split2(dname:str, num_clients: int, storage_dir:str, batch_size=32):
   
     trainset, testset = getTrainTestDatasets(dname, storage_dir)
 
@@ -268,6 +288,55 @@ def iid_split(dname:str, num_clients: int, storage_dir:str, batch_size=32):
         # valloaders.append(DataLoader(ds_val, batch_size=batch_size))
     # tloader = DataLoader(testset, batch_size=batch_size)
     return train_datasets, val_datasets, testset, {}
+
+
+def splitDataSetIntoNClientsIID(dataset, clients):
+
+    parts = [len(dataset)//clients for _ in range(clients)]
+
+    parts[0] += len(dataset) % clients
+
+    print(f"Spliting Datasets {len(dataset)} into parts:{parts}")
+
+
+    subsets =  torch.utils.data.random_split(dataset, parts)
+
+    return [SubsetToDataset(subset) for subset in subsets]
+
+
+def iid_split(dname:str, num_clients: int, storage_dir:str, batch_size=-1):
+  
+    trainset, testset = getTrainTestDatasets(dname, storage_dir)
+
+
+    train_datasets = splitDataSetIntoNClientsIID(trainset, num_clients)
+    val_datasets = train_datasets
+    
+
+
+    
+    
+    return train_datasets, val_datasets, testset, {}
+
+class NoisyDataset(torch.utils.data.Dataset):
+    def __init__(self, dataset, num_classes, noise_rate):
+        assert noise_rate in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1], f"Noise rate must be in [0.1, 0.2, 0.3, 0.4, 0.5, 0.6, 0.7, 0.8, 0.9, 1] but got {noise_rate}"
+        self.dataset = dataset
+        self.num_classes = num_classes
+        self.class_ids = random.sample(range(num_classes), int(noise_rate*num_classes))
+
+    def __len__(self):
+        return len(self.dataset)
+
+    def __getitem__(self, idx):
+        x, y = self.dataset[idx]
+        if y in self.class_ids:
+            y_hat = random.randint(0, self.num_classes-1)
+            if y_hat != y:
+                y = y_hat
+            else:
+                y = (y+1)%self.num_classes
+        return x, y
 
 
 class AttackBackdoor(torch.utils.data.Dataset):

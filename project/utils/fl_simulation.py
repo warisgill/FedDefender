@@ -1,19 +1,16 @@
 from typing import Callable, Dict, List, Optional, Tuple, Union
-
 import flwr as fl
 import torch
 from torch.utils.data import DataLoader
 
-from .data_distribution import (AttackBackdoor, iid_split,
-                                     initiizeClientsData)
+from .data_distribution import (AttackBackdoor, NoisyDataset, iid_split)
 from .flwr_client import FlowerClient, get_parameters, set_parameters
 from .custom_agg_stratgies import FedAvg_Custom_Strategy, Gradient_Clipping_Strategy, FedFuzz_Defense_Strategy 
 from .models import initializeModel, test
 
  
 class Simulation:
-    def __init__(self, config, cache):
-        
+    def __init__(self, config, cache):        
         self.malicious_clients_ids = config["MALICIOUS_CLIENTS_IDS"]
         self.ray_storage = config["RAY_STORAGE"]
         self.CACHE = cache
@@ -21,9 +18,8 @@ class Simulation:
         self.strategy = None
 
         self.sim_config = config
-        self.DEVICE = torch.device("cpu")
+        self.DEVICE = torch.device("cuda")
         self.nn_config = config["nn_config"]
-        # self.config = config
         self.percentage_of_randomly_selected_clients = config[
             "percentage_of_randomly_selected_clients"]
         self.NUM_CLIENTS = self.sim_config["NUM_CLIENTS"]
@@ -37,6 +33,7 @@ class Simulation:
                 print(f"Injecting backdoor to client {cid}")
                 s =  train_dsets[cid][0][0].squeeze().shape
                 backdor_dataset = AttackBackdoor(dataset=train_dsets[cid], class_ids_to_poison=[0,1,2,3,4,5,6,7,8], attack_pattern=getBackDoorPatterGrey(s), backdoor_target_class_id=9)
+                # backdor_dataset = NoisyDataset(dataset=train_dsets[cid], num_classes=10, noise_rate=1)
                 train_dsets[cid] = backdor_dataset
                 # for i in range(len(train_dsets[cid])):
                 #     print(f"cid {cid}  class {train_dsets[cid][i][1]}")
@@ -62,10 +59,7 @@ class Simulation:
             self._setStrategy(Agg_Strategy=FedFuzz_Defense_Strategy)
         else:
             raise ValueError("Invalid strategy name")
-
-
-
-        # self._setStrategy()
+        
 
     def _setStrategy(self, Agg_Strategy):
         initial_net = initializeModel(self.nn_config)
@@ -109,10 +103,11 @@ class Simulation:
         net = initializeModel(self.nn_config).to(self.DEVICE)
         trainloader = self.trainloaders[int(cid)]
         valloader = self.valloaders[int(cid)]
-        return FlowerClient(cid, net, trainloader, valloader, self.DEVICE, malicious_clients_ids=self.malicious_clients_ids)
+        return FlowerClient(cid, net, trainloader, valloader, self.DEVICE, malicious_clients_ids=self.malicious_clients_ids).to_client()
 
     def run(self):
-        ray_init_args = {"_temp_dir": self.ray_storage}
+        ray_init_args = {"num_cpus": 8, "num_gpus":1}
+        
         fl.simulation.start_simulation(
             ray_init_args= ray_init_args,
             client_fn=self._getClient,
@@ -120,6 +115,7 @@ class Simulation:
             config=fl.server.ServerConfig(
                 num_rounds=self.NUM_ROUNDS),  # Just three rounds
             strategy=self.strategy,
+             client_resources={"num_gpus": 0.33, "num_cpus": 1}
         )
 
 

@@ -6,13 +6,43 @@ import torch
 from utils.models import train, test
 
 def get_parameters(net) -> List[np.ndarray]:
-    return [val.cpu().numpy() for _, val in net.state_dict().items()]
+    return [val.cpu().detach().clone().numpy() for _, val in net.state_dict().items()]
 
 
-def set_parameters(net, parameters: List[np.ndarray]):
+def set_parameters(net, parameters):
+    net = net.cpu()
     params_dict = zip(net.state_dict().keys(), parameters)
-    state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
-    net.load_state_dict(state_dict, strict=True)
+    new_state_dict = {k: torch.from_numpy(v) for k, v in params_dict}
+    # net.load_state_dict(state_dict, strict=True)
+    # Assuming 'model' is your PyTorch model with the same architecture
+    
+    # for name, param in net.named_parameters():
+    #     for p in parameters:
+    #         param.data = torch.from_numpy(p)
+
+    # new_state_dict = {name: torch.from_numpy(array) for name, array in state_dict.items()}
+    net.load_state_dict(new_state_dict, strict=True)
+
+
+
+# def set_parameters(net, parameters: List[np.ndarray]):
+#     params_dict = zip(net.state_dict().keys(), parameters)
+#     state_dict = OrderedDict({k: torch.Tensor(v) for k, v in params_dict})
+#     net.load_state_dict(state_dict, strict=True)
+
+
+# def set_parameters2(model, parameters):
+#     """Set model parameters from a list of NumPy ndarrays Exclude the bn layer if
+#     available.
+#     """
+#     # model.train()
+#     model.zero_grad()
+#     model = model.cpu()
+#     params_dict = zip(model.state_dict().keys(), parameters)
+#     state_dict = OrderedDict({k: torch.tensor(v) for k, v in params_dict})
+#     model.load_state_dict(state_dict, strict=True)
+
+
 
 
 class FlowerClient(fl.client.NumPyClient):

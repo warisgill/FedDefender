@@ -44,8 +44,8 @@ class FedFuzz:
     def runFedFuzz(self, nc_t):
         all_fedfuzz_seqs = []
         for i in range(len(self.fuzz_inputs)):
-            # seq = self._findNormalClientsSeqV2LayerBased(i, nc_t)
-            seq = self._findNormalClientsSeqV1(i, nc_t)
+            seq = self._findNormalClientsSeqV2LayerBased(i, nc_t)
+            # seq = self._findNormalClientsSeqV1(i, nc_t)
             all_fedfuzz_seqs.append(seq)
         return all_fedfuzz_seqs
 

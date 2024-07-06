@@ -18,8 +18,10 @@ import argparse
 import pytorch_lightning as pl
 import random
 
+from pytorch_lightning import seed_everything
 
-pl.utilities.seed.seed_everything(786)
+
+seed_everything(786)
 
 global Hooks_Storage
 Hooks_Storage = []

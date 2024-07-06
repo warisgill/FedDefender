@@ -15,7 +15,9 @@ from torch.nn.init import (kaiming_normal_, kaiming_uniform_, normal_,
                            orthogonal_, trunc_normal_, uniform_,
                            xavier_normal_, xavier_uniform_)
 
-pl.utilities.seed.seed_everything(786)
+from pytorch_lightning import seed_everything
+
+seed_everything(786)
 
 def evalauteFedFuzz(participating_clients_ids, malicious_ids, fedfuzz_clients_combs):
     benign_clients = participating_clients_ids - malicious_ids
